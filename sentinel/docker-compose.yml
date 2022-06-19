@@ -1,0 +1,78 @@
+version: '3'
+services:
+  master:
+    image: redis
+    container_name: cluster-master
+    hostname: master
+    command: cluster-server  --requirepass zxcde@1  --masterauth zxcde@1
+    ports:
+      - 6380:6379
+  slave1:
+    image: redis
+    container_name: cluster-slave-1
+    hostname: slave1
+    ports:
+      - 6381:6379
+    command: cluster-server --slaveof cluster-master 6379 --masterauth zxcde@1  --requirepass zxcde@1
+  slave2:
+    image: redis
+    container_name: cluster-slave-2
+    hostname: slave2
+    ports:
+      - 6382:6379
+    command: cluster-server --slaveof cluster-master 6379 --masterauth zxcde@1 --requirepass zxcde@1
+  sentinel1:
+    image: redis
+    container_name: cluster-sentinel-1
+    hostname: cluster-sentinel-1
+    ports:
+      - 26379:26379
+    command: cluster-sentinel /usr/local/etc/cluster/sentinel.conf
+    volumes:
+      - ./sentinel/sentinel1.conf:/usr/local/etc/cluster/sentinel.conf
+    depends_on:
+      - master
+      - slave1
+      - slave2
+    links:
+      - master
+      - slave1
+      - slave2
+  sentinel2:
+    image: redis
+    container_name: cluster-sentinel-2
+    hostname: cluster-sentinel-2
+    ports:
+      - 26380:26379
+    command: cluster-sentinel /usr/local/etc/cluster/sentinel.conf
+    volumes:
+      - ./sentinel/sentinel2.conf:/usr/local/etc/cluster/sentinel.conf
+    depends_on:
+      - master
+      - slave1
+      - slave2
+    links:
+      - master
+      - slave1
+      - slave2
+  sentinel3:
+    image: redis
+    container_name: cluster-sentinel-3
+    hostname: cluster-sentinel-3
+    ports:
+      - 26381:26379
+    command: cluster-sentinel /usr/local/etc/cluster/sentinel.conf
+    volumes:
+      - ./sentinel/sentinel3.conf:/usr/local/etc/cluster/sentinel.conf
+    depends_on:
+      - master
+      - slave1
+      - slave2
+    links:
+      - master
+      - slave1
+      - slave2
+networks:
+  default:
+    external:
+      name: redis_default
